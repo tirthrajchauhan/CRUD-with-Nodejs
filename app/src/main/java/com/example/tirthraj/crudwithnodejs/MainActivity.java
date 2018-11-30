@@ -33,7 +33,8 @@ public class MainActivity extends AppCompatActivity {
         //make get request
 
        // new GetDataTask().execute("https://nodem3.herokuapp.com/patients/");
-        new PostDataTask().execute("https://nodem3.herokuapp.com/patients/");
+       // new PostDataTask().execute("https://nodem3.herokuapp.com/patients/");
+        new PutDataTask().execute("https://nodem3.herokuapp.com/patients/5c01b41d7f4b2c0016f8da2a");
 
     }
 
@@ -210,6 +211,96 @@ public class MainActivity extends AppCompatActivity {
              }
         }
 
+        class  PutDataTask  extends  AsyncTask<String, Void, String>{
+
+            ProgressDialog progressDialog;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+
+                progressDialog = new ProgressDialog(MainActivity.this);
+                progressDialog.setMessage("Updating data...");
+                progressDialog.show();
+
+            }
+
+            @Override
+            protected String doInBackground(String... params) {
+             try{
+                 return  putData(params[0]);
+             }catch (IOException ex){
+                 return  "network error";
+             }
+             catch (JSONException ex){
+                 return "data invalid";
+             }
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+                super.onPostExecute(result);
+
+
+                mResult.setText(result);
+                if(progressDialog != null){
+                    progressDialog.dismiss();
+                }
+
+            }
+
+            private String putData(String urlPath) throws  IOException,JSONException{
+
+                BufferedWriter bufferedWriter=null;
+                String result= null;
+
+               try {
+                   //Create Data to update
+
+                   JSONObject dataToSend = new JSONObject();
+                   dataToSend.put("first_name", "Andrew-Updated");
+                   dataToSend.put("last_name", "james-Updated");
+                   dataToSend.put("dob", "111111");
+                   dataToSend.put("address", "Toronto-up");
+                   dataToSend.put("department", "psychology-up");
+                   dataToSend.put("doctor", "DR.D-up");
+
+                   //initialize and config request, then connect to server
+
+                   URL url = new URL(urlPath);
+                   HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                   urlConnection.setReadTimeout(10000);//ms
+                   urlConnection.setConnectTimeout(10000);//ms
+                   urlConnection.setRequestMethod("PUT");
+                   urlConnection.setDoOutput(true); // enable output (body data)
+                   urlConnection.setRequestProperty("Content-Type", "application/json");//set header
+                   urlConnection.connect();
+
+
+                   // Write data into server.
+                   OutputStream outputStream = urlConnection.getOutputStream();
+                   bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
+                   bufferedWriter.write(dataToSend.toString());
+                   bufferedWriter.flush();
+
+                   //Check update successful or not
+
+                   if (urlConnection.getResponseCode() == 200) {
+                       return "update succesfully";
+                   } else {
+                       return "update failed";
+                   }
+               }
+               finally {
+                   if(bufferedWriter != null){
+                       bufferedWriter.close();
+                   }
+               }
+
+
+            }
+
+        }
         
 
     }
