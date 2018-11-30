@@ -6,10 +6,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -25,7 +32,8 @@ public class MainActivity extends AppCompatActivity {
 
         //make get request
 
-        new GetDataTask().execute("https://nodem3.herokuapp.com/patients/");
+       // new GetDataTask().execute("https://nodem3.herokuapp.com/patients/");
+        new PostDataTask().execute("https://nodem3.herokuapp.com/patients/");
 
     }
 
@@ -47,35 +55,13 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            protected String doInBackground(String... params) {
-
-                StringBuilder result= new StringBuilder();
-                try {
-                    URL url = new URL(params[0]);
-                    HttpURLConnection urlConnection= (HttpURLConnection) url.openConnection();
-                    urlConnection.setReadTimeout(10000);//ms
-                    urlConnection.setConnectTimeout(10000);//ms
-                    urlConnection.setRequestMethod("GET");
-                    urlConnection.setRequestProperty("Content-Type","application/jason");//set header
-                    urlConnection.connect();
-
-                    //Read data from server
-                    InputStream inputStream= urlConnection.getInputStream();
-                    BufferedReader bufferedReader= new BufferedReader(new InputStreamReader(inputStream));
-                    String line;
-                    while((line = bufferedReader.readLine())!=null){
-                        result.append(line).append("\n");
-
-                    }
-
-                }
+            protected String doInBackground(String... params){
+                try{
+                return  getData(params[0]);}
                 catch (IOException ex){
-                    return "Network error";
-
+                    return "Network error !";
                 }
-                return result.toString();
             }
-
 
             @Override
             protected void onPostExecute(String result) {
@@ -91,9 +77,140 @@ public class MainActivity extends AppCompatActivity {
 
             }
 
+            private  String getData(String urlPath) throws IOException{
 
-          
+                {
+
+                    StringBuilder result= new StringBuilder();
+                    BufferedReader bufferedReader= null;
+
+                    try {
+                        URL url = new URL(urlPath);
+                        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                        urlConnection.setReadTimeout(10000);//ms
+                        urlConnection.setConnectTimeout(10000);//ms
+                        urlConnection.setRequestMethod("GET");
+                        urlConnection.setRequestProperty("Content-Type", "application/json");//set header
+                        urlConnection.connect();
+
+                        //Read data from server
+                        InputStream inputStream = urlConnection.getInputStream();
+                        bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                        String line;
+                        while ((line = bufferedReader.readLine()) != null) {
+                            result.append(line).append("\n");
+
+                        }
+
+                    }finally {{
+                        if(bufferedReader != null){
+                            bufferedReader.close();
+                        }
+                    }
+
+
+                    }
+                    return result.toString();
+                }
+
+
+            }
+
         }
+
+        class PostDataTask extends  AsyncTask<String, Void, String>{
+
+            ProgressDialog progressDialog;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                progressDialog =new ProgressDialog(MainActivity.this);
+                progressDialog.setMessage("Inserting data...");
+                progressDialog.show();
+            }
+
+            @Override
+            protected String doInBackground(String... params) {
+
+                try {
+                    return postData(params[0]);
+                } catch (IOException ex) {
+                    return "network Error !";
+                } catch (JSONException ex) {
+                    return "Data Invalid !";
+                }
+
+            }
+
+
+            @Override
+            protected void onPostExecute(String result) {
+                super.onPostExecute(result);
+                mResult.setText(result);
+                if (progressDialog != null){
+                progressDialog.dismiss();
+
+                }
+                }
+
+             private String postData(String urlPath) throws IOException , JSONException {
+
+                 StringBuilder result = new StringBuilder();
+                 BufferedWriter bufferedWriter = null;
+                 BufferedReader bufferedReader = null;
+
+
+                try {
+                    //create data to send to sever
+
+                    JSONObject dataToSend = new JSONObject();
+                    dataToSend.put("first_name", "Andrew");
+                    dataToSend.put("last_name", "james");
+                    dataToSend.put("dob", "010289");
+                    dataToSend.put("address", "Toronto");
+                    dataToSend.put("department", "psychology");
+                    dataToSend.put("doctor", "DR.D");
+
+                    //Initialize and config request then connect server
+                    URL url = new URL(urlPath);
+                    HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setReadTimeout(10000);//ms
+                    urlConnection.setConnectTimeout(10000);//ms
+                    urlConnection.setRequestMethod("POST");
+                    urlConnection.setDoOutput(true); // enable output (body data)
+                    urlConnection.setRequestProperty("Content-Type", "application/json");//set header
+                    urlConnection.connect();
+
+                    // Write data into server.
+                    OutputStream outputStream = urlConnection.getOutputStream();
+                    bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
+                    bufferedWriter.write(dataToSend.toString());
+                    bufferedWriter.flush();
+
+                    //read data response from server
+
+                    InputStream inputStream = urlConnection.getInputStream();
+                    bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                    String line;
+                    while ((line = bufferedReader.readLine()) != null) {
+
+                        result.append(line).append("\n");
+                    }
+                }finally {
+                  if (bufferedReader != null){
+                      bufferedReader.close();
+                  }
+                  if(bufferedWriter!=null){
+                      bufferedWriter.close();
+                  }
+                }
+
+                return result.toString();
+             }
+        }
+
+        
 
     }
 
