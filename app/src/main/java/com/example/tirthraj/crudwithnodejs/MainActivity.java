@@ -4,6 +4,9 @@ import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import org.json.JSONException;
@@ -22,6 +25,9 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
     private TextView mResult;
+    private EditText FirstName,LastName,DOB,Address,Department,Doctor;
+    String Fname,Lname,Gdob,Gaddress,GDepartment,Gdoctor;
+    Button button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,14 +35,43 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mResult = (TextView) findViewById(R.id.tv_result);
+        FirstName= (EditText)findViewById(R.id.editTextFirstname);
+        LastName= (EditText)findViewById(R.id.editTextLastname);
+        DOB= (EditText)findViewById(R.id.editTextDob);
+        Address= (EditText)findViewById(R.id.editTextAddress);
+        Department= (EditText)findViewById(R.id.editTextDepartment);
+        Doctor=(EditText)findViewById(R.id.editTextDoctor);
+        button= (Button) findViewById(R.id.buttonAddPatient);
+
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Fname = FirstName.getText().toString();
+                 Lname = LastName.getText().toString();
+                 Gdob = DOB.getText().toString();
+                 Gaddress=Address.getText().toString();
+                 GDepartment=Department.getText().toString();
+                 Gdoctor=Doctor.getText().toString();
+                new GetDataTask().execute("https://nodem3.herokuapp.com/patients/");
+
+              //  new PostDataTask().execute("https://nodem3.herokuapp.com/patients/");
+               //new DeleteDataTask().execute("https://nodem3.herokuapp.com/patients/5c08454b4f3df600163b6ed4");
+
+            }
+        });
+
+
+
+
 
         //make get request
 
-       // new GetDataTask().execute("https://nodem3.herokuapp.com/patients/");
+       //new GetDataTask().execute("https://nodem3.herokuapp.com/patients/");
        // new PostDataTask().execute("https://nodem3.herokuapp.com/patients/");
         //new PutDataTask().execute("https://nodem3.herokuapp.com/patients/5c01b41d7f4b2c0016f8da2a");
 
-        new DeleteDataTask().execute("https://nodem3.herokuapp.com/patients/5c01b41d7f4b2c0016f8da2a");
+      // new DeleteDataTask().execute("https://nodem3.herokuapp.com/patients/5c08454b4f3df600163b6ed4");
     }
 
 
@@ -167,12 +202,12 @@ public class MainActivity extends AppCompatActivity {
                     //create data to send to sever
 
                     JSONObject dataToSend = new JSONObject();
-                    dataToSend.put("first_name", "Andrew");
-                    dataToSend.put("last_name", "james");
-                    dataToSend.put("dob", "010289");
-                    dataToSend.put("address", "Toronto");
-                    dataToSend.put("department", "psychology");
-                    dataToSend.put("doctor", "DR.D");
+                    dataToSend.put("first_name",Fname);
+                    dataToSend.put("last_name",Lname);
+                    dataToSend.put("dob", Gdob);
+                    dataToSend.put("address",Gaddress);
+                    dataToSend.put("department", GDepartment);
+                    dataToSend.put("doctor", Gdoctor);
 
                     //Initialize and config request then connect server
                     URL url = new URL(urlPath);
